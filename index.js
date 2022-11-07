@@ -18,6 +18,19 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+async function run() {
+  try {
+    const collection = client.db("foodDB").collection("items");
+    app.get("/items", async (req, res) => {
+      const query = {};
+      const cursor = collection.find(query);
+      const item = await cursor.toArray();
+      res.send(item);
+    });
+  } finally {
+  }
+}
+run().catch((err) => console.log(err));
 
 app.get("/", (req, res) => {
   res.send("chicken Server Running");
