@@ -23,6 +23,12 @@ async function run() {
     const collection = client.db("foodDB").collection("items");
     app.get("/items", async (req, res) => {
       const query = {};
+      const cursor = collection.find(query).limit(3);
+      const item = await cursor.toArray();
+      res.send(item);
+    });
+    app.get("/allItems", async (req, res) => {
+      const query = {};
       const cursor = collection.find(query);
       const item = await cursor.toArray();
       res.send(item);
