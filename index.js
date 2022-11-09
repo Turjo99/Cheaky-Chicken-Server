@@ -21,6 +21,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const collection = client.db("foodDB").collection("items");
+    const reviewcollection = client.db("foodDB").collection("reviews");
     app.get("/items", async (req, res) => {
       const query = {};
       const cursor = collection.find(query).limit(3);
@@ -42,7 +43,24 @@ async function run() {
     app.post("/reviews", async (req, res) => {
       const review = req.body;
       console.log(review);
-      const result = await collection.insertOne(review);
+      const result = await reviewcollection.insertOne(review);
+      res.send(result);
+    });
+    app.get("/user", async (req, res) => {
+      let query = {};
+      if (req.query.email) {
+        query = {
+          email: req.query.email,
+        };
+      }
+      const cursor = reviewcollection.find(query);
+      const userReview = await cursor.toArray();
+      res.send(userReview);
+    });
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await reviewcollection.deleteOne(query);
       res.send(result);
     });
   } finally {
