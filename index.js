@@ -40,11 +40,23 @@ async function run() {
       const item = await collection.findOne(query);
       res.send(item);
     });
+    app.post("/allItems", async (req, res) => {
+      const review = req.body;
+      console.log(review);
+      const result = await collection.insertOne(review);
+      res.send(result);
+    });
     app.post("/reviews", async (req, res) => {
       const review = req.body;
       console.log(review);
       const result = await reviewcollection.insertOne(review);
       res.send(result);
+    });
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const cursor = reviewcollection.find(query);
+      const item = await cursor.toArray();
+      res.send(item);
     });
     app.get("/user", async (req, res) => {
       let query = {};
