@@ -112,6 +112,22 @@ async function run() {
       const userReview = await cursor.toArray();
       res.send(userReview);
     });
+    app.patch("/user/:id", async (req, res) => {
+      console.log(req.params);
+      console.log(req.body);
+      const id = req.params.id;
+      const updatedReview = req.body.updatedReview;
+      const query = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          userReview: updatedReview,
+        },
+      };
+      const result = await reviewcollection.updateOne(query, updatedDoc);
+      res.send(result);
+      // console.log(result);
+    });
+
     app.delete("/user/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
