@@ -2,6 +2,7 @@
 //chicken-db
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
@@ -18,10 +19,33 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
 async function run() {
   try {
     const collection = client.db("foodDB").collection("items");
     const reviewcollection = client.db("foodDB").collection("reviews");
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "30d",
+      });
+      res.send({ token });
+    });
     app.get("/items", async (req, res) => {
       const query = {};
       const cursor = collection.find(query).limit(3);
@@ -52,13 +76,32 @@ async function run() {
       const result = await reviewcollection.insertOne(review);
       res.send(result);
     });
+
+    // app.get("/reviews", async (req, res) => {
+    //   const query = {};
+    //   const cursor = reviewcollection.find(query);
+    //   const item = await cursor.toArray();
+    //   res.send(item);
+    // });
     app.get("/reviews", async (req, res) => {
-      const query = {};
+      let query = {};
+      console.log(req.query.itemID);
+      if (req.query.itemID) {
+        query = {
+          itemID: req.query.itemID,
+        };
+      }
+
       const cursor = reviewcollection.find(query);
-      const item = await cursor.toArray();
-      res.send(item);
+      const userReview = await cursor.toArray();
+      res.send(userReview);
     });
-    app.get("/user", async (req, res) => {
+    app.get("/user", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+
+      if (decoded.email !== req.query.email) {
+        res.status(403).send({ message: "unauthorized access" });
+      }
       let query = {};
       if (req.query.email) {
         query = {
