@@ -92,7 +92,7 @@ async function run() {
         };
       }
 
-      const cursor = reviewcollection.find(query);
+      const cursor = reviewcollection.find(query).sort({ date: -1 });
       const userReview = await cursor.toArray();
       res.send(userReview);
     });
